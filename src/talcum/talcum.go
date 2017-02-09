@@ -2,14 +2,18 @@ package talcum
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
+	"time"
 )
 
 // Config contains keys that are used when setting locks in order to
 // namespace the current selection process.
 type Config struct {
 	ApplicationName string
-	ID              string
+	SelectionID     string
+	LockDelay       time.Duration
+	DebugMode       bool
 }
 
 // SelectorEntry contains the value of each selectable thing and the
@@ -89,7 +93,7 @@ func NewSelector(config *Config, selectorConfig SelectorConfig, locker Locker) *
 func (s *Selector) lockKey(entry *SelectorEntry, num int) string {
 	return fmt.Sprintf("%s/%s/%s/%v",
 		s.talcumConfig.ApplicationName,
-		s.talcumConfig.ID, entry.Value, num)
+		s.talcumConfig.SelectionID, entry.Value, num)
 }
 
 // SelectRandom returns a random entry.
@@ -104,13 +108,37 @@ func (s *Selector) Select() (*SelectorEntry, error) {
 	entryLocks := shuffleEntryLocks(s.selectorConfig.entryLocks())
 
 	for _, entryLock := range entryLocks {
-		locked, err := s.locker.Lock(s.lockKey(entryLock.selectorEntry, entryLock.lockValue))
+		key := s.lockKey(entryLock.selectorEntry, entryLock.lockValue)
+
+		if s.talcumConfig.DebugMode {
+			log.Printf("Attempting to lock key: %s", key)
+		}
+
+		locked, err := s.locker.Lock(key)
 		if err != nil {
 			return nil, err
 		}
 		if locked {
 			return entryLock.selectorEntry, nil
 		}
+
+		if s.talcumConfig.DebugMode {
+			log.Printf("Could not lock key: %s", key)
+		}
+
+		// Optionally sleep as to not hammer the locking
+		// backend.
+		if s.talcumConfig.LockDelay > 0 {
+			if s.talcumConfig.DebugMode {
+				log.Printf("Sleeping before attempting to select new key")
+			}
+
+			time.Sleep(s.talcumConfig.LockDelay)
+		}
+	}
+
+	if s.talcumConfig.DebugMode {
+		log.Printf("Selecting random key")
 	}
 
 	// If we couldn't claim anything, choose an entry randomly.

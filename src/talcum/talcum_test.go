@@ -28,7 +28,7 @@ func (m *mockLocker) Lock(key string) (bool, error) {
 func TestSelectSmoke(t *testing.T) {
 	talcumConfig := &talcum.Config{
 		ApplicationName: "test-app",
-		ID:              "test-id",
+		SelectionID:     "test-id",
 	}
 	selectorConfig := []*talcum.SelectorEntry{
 		{
@@ -55,7 +55,7 @@ func TestSelectSmoke(t *testing.T) {
 func TestSelectChoosesAllEntries(t *testing.T) {
 	talcumConfig := &talcum.Config{
 		ApplicationName: "test-app",
-		ID:              "test-id",
+		SelectionID:     "test-id",
 	}
 	var selectorConfig []*talcum.SelectorEntry
 
@@ -91,7 +91,7 @@ func TestSelectChoosesAllEntries(t *testing.T) {
 func TestSelectChoosesAllEntriesAtLeastMin(t *testing.T) {
 	talcumConfig := &talcum.Config{
 		ApplicationName: "test-app",
-		ID:              "test-id",
+		SelectionID:     "test-id",
 	}
 	var selectorConfig []*talcum.SelectorEntry
 
