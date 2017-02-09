@@ -1,6 +1,7 @@
 package talcum_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/dollarshaveclub/talcum/src/talcum"
@@ -24,7 +25,7 @@ func (m *mockLocker) Lock(key string) (bool, error) {
 	return true, nil
 }
 
-func TestSelectSmokeStyle(t *testing.T) {
+func TestSelectSmoke(t *testing.T) {
 	talcumConfig := &talcum.Config{
 		ApplicationName: "test-app",
 		ID:              "test-id",
@@ -43,10 +44,82 @@ func TestSelectSmokeStyle(t *testing.T) {
 
 	selector := talcum.NewSelector(talcumConfig, selectorConfig, locker)
 
-	entry, err := selector.Select()
-	if err != nil {
-		t.Fatal(err)
+	for n := 0; n < 100; n++ {
+		_, err := selector.Select()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestSelectChoosesAllEntries(t *testing.T) {
+	talcumConfig := &talcum.Config{
+		ApplicationName: "test-app",
+		ID:              "test-id",
+	}
+	var selectorConfig []*talcum.SelectorEntry
+
+	for n := 1; n <= 10; n++ {
+		selectorConfig = append(selectorConfig, &talcum.SelectorEntry{
+			Value: strconv.Itoa(n),
+			Num:   n,
+		})
 	}
 
-	t.Logf("selected entry: %v", entry)
+	for j := 0; j < 10; j++ {
+		locker := newMockLocker()
+		selector := talcum.NewSelector(talcumConfig, selectorConfig, locker)
+		seen := make(map[string]int)
+
+		for i := 0; i < 55; i++ {
+			entry, err := selector.Select()
+			if err != nil {
+				t.Fatal(err)
+			}
+			seen[entry.Value]++
+		}
+
+		for _, entry := range selectorConfig {
+			numSeen := seen[entry.Value]
+			if numSeen != entry.Num {
+				t.Fatalf("expected: %d, seen: %d", entry.Num, numSeen)
+			}
+		}
+	}
+}
+
+func TestSelectChoosesAllEntriesAtLeastMin(t *testing.T) {
+	talcumConfig := &talcum.Config{
+		ApplicationName: "test-app",
+		ID:              "test-id",
+	}
+	var selectorConfig []*talcum.SelectorEntry
+
+	for n := 1; n <= 10; n++ {
+		selectorConfig = append(selectorConfig, &talcum.SelectorEntry{
+			Value: strconv.Itoa(n),
+			Num:   n,
+		})
+	}
+
+	for j := 0; j < 10; j++ {
+		locker := newMockLocker()
+		selector := talcum.NewSelector(talcumConfig, selectorConfig, locker)
+		seen := make(map[string]int)
+
+		for i := 0; i < 100; i++ {
+			entry, err := selector.Select()
+			if err != nil {
+				t.Fatal(err)
+			}
+			seen[entry.Value]++
+		}
+
+		for _, entry := range selectorConfig {
+			numSeen := seen[entry.Value]
+			if numSeen < entry.Num {
+				t.Fatalf("expected at least: %v", entry.Num)
+			}
+		}
+	}
 }

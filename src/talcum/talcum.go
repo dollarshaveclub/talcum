@@ -5,87 +5,79 @@ import (
 	"math/rand"
 )
 
+// Config contains keys that are used when setting locks in order to
+// namespace the current selection process.
 type Config struct {
 	ApplicationName string
 	ID              string
 }
 
-type Locker interface {
-	Lock(key string) (bool, error)
-}
-
+// SelectorEntry contains the value of each selectable thing and the
+// number of times it must be selected.
 type SelectorEntry struct {
 	Value string `json:"value"`
 	Num   int    `json:"num"`
 }
 
+// SelectorConfig all selectable entries.
 type SelectorConfig []*SelectorEntry
 
-func (s SelectorConfig) copyExcludingEntry(entry *SelectorEntry) SelectorConfig {
-	var config SelectorConfig
+type entryLock struct {
+	selectorEntry *SelectorEntry
+	lockValue     int
+}
 
-	for _, e := range s {
-		if entry != e {
-			config = append(config, e)
+func (s SelectorConfig) entryLocks() []*entryLock {
+	var locks []*entryLock
+	for _, entry := range s {
+		for i := 0; i < entry.Num; i++ {
+			locks = append(locks, &entryLock{
+				selectorEntry: entry,
+				lockValue:     i,
+			})
+		}
+	}
+	return locks
+}
+
+func shuffleEntryLocks(locks []*entryLock) []*entryLock {
+	var shuffledLocks []*entryLock
+
+	// This algorithm could potentially not terminate, but the
+	// average running time is O(len(locks)).
+	seen := make(map[int]bool)
+	for {
+		val := rand.Intn(len(locks))
+		if _, ok := seen[val]; ok {
+			continue
+		}
+		seen[val] = true
+
+		shuffledLocks = append(shuffledLocks, locks[val])
+
+		if len(seen) == len(locks) {
+			break
 		}
 	}
 
-	return config
+	return shuffledLocks
 }
 
-type selectorRandomRange struct {
-	entry      *SelectorEntry
-	rangeStart float64
-	rangeEnd   float64
+// Locker can set a lock for an entry.
+type Locker interface {
+	Lock(key string) (bool, error)
 }
 
-func selectorRangeFromConfig(config SelectorConfig) []*selectorRandomRange {
-	var totalNum int
-	for _, entry := range config {
-		totalNum += entry.Num
-	}
-
-	var rangeMarker float64
-	var ranges []*selectorRandomRange
-	for _, entry := range config {
-		entryProportion := float64(entry.Num) / float64(totalNum)
-		rangeEnd := rangeMarker + entryProportion
-		ranges = append(ranges, &selectorRandomRange{
-			entry:      entry,
-			rangeStart: rangeMarker,
-			rangeEnd:   rangeEnd,
-		})
-		rangeMarker = rangeEnd
-	}
-
-	// Ensure there aren't issues with floating point math.
-	lastEntry := ranges[len(ranges)-1]
-	lastEntry.rangeEnd = 1
-
-	return ranges
-}
-
-func locateEntryByFloat(randomRange []*selectorRandomRange, f float64) *SelectorEntry {
-	if f > 1 || f < 0 {
-		panic("illegal float value")
-	}
-
-	for _, entry := range randomRange {
-		if entry.rangeStart <= f && entry.rangeEnd < f {
-			return entry.entry
-		}
-	}
-
-	// We should never reach this.
-	return randomRange[len(randomRange)-1].entry
-}
-
+// Selector can select one of the entries it is configured to
+// track. Each entry is configured to be used `n` times before it can
+// be chosen randomly.
 type Selector struct {
 	talcumConfig   *Config
 	selectorConfig SelectorConfig
 	locker         Locker
 }
 
+// NewSelector creates a new selector.
 func NewSelector(config *Config, selectorConfig SelectorConfig, locker Locker) *Selector {
 	return &Selector{
 		talcumConfig:   config,
@@ -95,44 +87,32 @@ func NewSelector(config *Config, selectorConfig SelectorConfig, locker Locker) *
 }
 
 func (s *Selector) lockKey(entry *SelectorEntry, num int) string {
-	return fmt.Sprintf("%s/%s/%v", s.talcumConfig.ApplicationName, s.talcumConfig.ID, num)
+	return fmt.Sprintf("%s/%s/%s/%v",
+		s.talcumConfig.ApplicationName,
+		s.talcumConfig.ID, entry.Value, num)
 }
 
-func (s *Selector) claimEntry(entry *SelectorEntry) (bool, error) {
-	for i := 0; i < entry.Num; i++ {
-		key := s.lockKey(entry, i)
-		locked, err := s.locker.Lock(key)
-		if err != nil {
-			return false, err
-		}
-		if locked {
-			return true, nil
-		}
-	}
-
-	return false, nil
+// SelectRandom returns a random entry.
+func (s *Selector) SelectRandom() *SelectorEntry {
+	return s.selectorConfig.entryLocks()[rand.Intn(len(s.selectorConfig))].selectorEntry
 }
 
+// Select locks an entry and returns it. Select attempts to lock all
+// entries up to the configured number. If all entries have been
+// locked, a random one is returned.
 func (s *Selector) Select() (*SelectorEntry, error) {
-	iterations := len(s.selectorConfig)
-	selectorConfig := s.selectorConfig
-	for i := 0; i < iterations; i++ {
-		ranges := selectorRangeFromConfig(selectorConfig)
-		entry := locateEntryByFloat(ranges, rand.Float64())
+	entryLocks := shuffleEntryLocks(s.selectorConfig.entryLocks())
 
-		claimedEntry, err := s.claimEntry(entry)
+	for _, entryLock := range entryLocks {
+		locked, err := s.locker.Lock(s.lockKey(entryLock.selectorEntry, entryLock.lockValue))
 		if err != nil {
 			return nil, err
 		}
-		if claimedEntry {
-			return entry, nil
+		if locked {
+			return entryLock.selectorEntry, nil
 		}
-
-		selectorConfig = selectorConfig.copyExcludingEntry(entry)
 	}
 
-	// If we couldn't claim anything, choose an entry randomly
-	// with weights.
-	ranges := selectorRangeFromConfig(s.selectorConfig)
-	return locateEntryByFloat(ranges, rand.Float64()), nil
+	// If we couldn't claim anything, choose an entry randomly.
+	return s.SelectRandom(), nil
 }
