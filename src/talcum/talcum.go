@@ -1,9 +1,11 @@
 package talcum
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"log"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -91,9 +93,13 @@ func NewSelector(config *Config, selectorConfig SelectorConfig, locker Locker) *
 }
 
 func (s *Selector) lockKey(entry *SelectorEntry, num int) string {
-	return fmt.Sprintf("%s/%s/%s/%v",
+	hasher := sha256.New()
+	hasher.Write([]byte(entry.RoleName))
+	hasher.Write([]byte(strconv.Itoa(num)))
+
+	return fmt.Sprintf("%s/%s/%x/%v",
 		s.talcumConfig.ApplicationName,
-		s.talcumConfig.SelectionID, entry.RoleName, num)
+		s.talcumConfig.SelectionID, hasher.Sum(nil)[:10], num)
 }
 
 // SelectRandom returns a random entry, weighing each entry using its

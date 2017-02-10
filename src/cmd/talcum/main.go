@@ -7,7 +7,6 @@ import (
 	"log"
 	"math/big"
 	"os"
-	"time"
 
 	crand "crypto/rand"
 
@@ -41,7 +40,7 @@ func main() {
 	flag.StringVar(&config.ApplicationName, "app-name", "app", "the name of the current application")
 	flag.StringVar(&config.SelectionID, "selection-id", "1", "the ID of the current selection")
 	flag.BoolVar(&config.DebugMode, "debug", false, "run in debug mode")
-	flag.DurationVar(&config.LockDelay, "lock-delay", 100*time.Millisecond, "the delay in between lock attempts")
+	flag.DurationVar(&config.LockDelay, "lock-delay", 0, "the delay in between lock attempts")
 	flag.Parse()
 
 	var selectorConfig talcum.SelectorConfig
