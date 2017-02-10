@@ -13,6 +13,11 @@ type ConsulLocker struct {
 	kvClient ConsulKVClient
 }
 
+// NewConsulLocker creates a new ConsulLocker.
+func NewConsulLocker(kv ConsulKVClient) *ConsulLocker {
+	return &ConsulLocker{kvClient: kv}
+}
+
 // Lock tries to lock a key, return true if the lock operation was
 // successful.
 func (c *ConsulLocker) Lock(key string) (bool, error) {
