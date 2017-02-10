@@ -6,27 +6,31 @@ coordinate role assignment.
 Talcum takes in a configuration file that defines all of the available
 roles and the number of actors that should take on the role. If there
 are roles available to be filled, an actor will locate a free one and
-set a lock on it. If all roles are taken, a random one will be chosen.
+set a lock on it. If all roles are taken, a random one will be
+chosen. The configuration file can be read in from the Consul KV store
+or from disk.
 
 ## Usage
 
 ```
 Usage of talcum:
   -app-name string
-        the name of the current application (default "app")
+    	the name of the current application (default "app")
   -config-path string
-        the path to the role configuration file
+    	the path to the role configuration file
   -consul-host string
-        the location of Consul (default "localhost:8500")
+    	the location of Consul (default "localhost:8500")
+  -consul-path string
+    	the path to the role configuration in Consul
   -debug
-        run in debug mode
+    	run in debug mode
   -lock-delay duration
-        the delay in between lock attempts (default 100ms)
+    	the delay in between lock attempts
   -selection-id string
-        the ID of the current selection (default "1")
+    	the ID of the current selection (default "1")
 ```
 
-## Example configuration file
+## Example configuration
 
 ```
 [
