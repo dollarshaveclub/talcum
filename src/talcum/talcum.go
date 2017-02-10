@@ -16,11 +16,11 @@ type Config struct {
 	DebugMode       bool
 }
 
-// SelectorEntry contains the value of each selectable thing and the
-// number of times it must be selected.
+// SelectorEntry contains the name of each role and the number of
+// times it must be selected.
 type SelectorEntry struct {
-	Value string `json:"value"`
-	Num   int    `json:"num"`
+	RoleName string `json:"role_name"`
+	Num      int    `json:"num"`
 }
 
 // SelectorConfig all selectable entries.
@@ -93,7 +93,7 @@ func NewSelector(config *Config, selectorConfig SelectorConfig, locker Locker) *
 func (s *Selector) lockKey(entry *SelectorEntry, num int) string {
 	return fmt.Sprintf("%s/%s/%s/%v",
 		s.talcumConfig.ApplicationName,
-		s.talcumConfig.SelectionID, entry.Value, num)
+		s.talcumConfig.SelectionID, entry.RoleName, num)
 }
 
 // SelectRandom returns a random entry, weighing each entry using its

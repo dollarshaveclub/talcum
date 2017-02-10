@@ -1,14 +1,14 @@
 [
   {
-    "value": "low,medium,high",
+    "role_name": "low,medium,high",
     "num": 3
   },
   {
-    "value": "billing",
+    "role_name": "billing",
     "num": 4
   },
   {
-    "value": "high,medium,low",
+    "role_name": "high,medium,low",
     "num": 5
   }
 ]

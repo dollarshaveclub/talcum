@@ -1,14 +1,14 @@
 [
   {
-    "value": "1",
+    "role_name": "role-1",
     "num": 1
   },
   {
-    "value": "2",
+    "role_name": "role-2",
     "num": 2
   },
   {
-    "value": "3",
+    "role_name": "role-3",
     "num": 3
   }
 ]

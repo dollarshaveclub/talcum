@@ -32,12 +32,12 @@ func TestSelectSmoke(t *testing.T) {
 	}
 	selectorConfig := []*talcum.SelectorEntry{
 		{
-			Value: "1",
-			Num:   1,
+			RoleName: "1",
+			Num:      1,
 		},
 		{
-			Value: "2",
-			Num:   2,
+			RoleName: "2",
+			Num:      2,
 		},
 	}
 	locker := newMockLocker()
@@ -61,8 +61,8 @@ func TestSelectChoosesAllEntries(t *testing.T) {
 
 	for n := 1; n <= 10; n++ {
 		selectorConfig = append(selectorConfig, &talcum.SelectorEntry{
-			Value: strconv.Itoa(n),
-			Num:   n,
+			RoleName: strconv.Itoa(n),
+			Num:      n,
 		})
 	}
 
@@ -76,11 +76,11 @@ func TestSelectChoosesAllEntries(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			seen[entry.Value]++
+			seen[entry.RoleName]++
 		}
 
 		for _, entry := range selectorConfig {
-			numSeen := seen[entry.Value]
+			numSeen := seen[entry.RoleName]
 			if numSeen != entry.Num {
 				t.Fatalf("expected: %d, seen: %d", entry.Num, numSeen)
 			}
@@ -97,8 +97,8 @@ func TestSelectChoosesAllEntriesAtLeastMin(t *testing.T) {
 
 	for n := 1; n <= 10; n++ {
 		selectorConfig = append(selectorConfig, &talcum.SelectorEntry{
-			Value: strconv.Itoa(n),
-			Num:   n,
+			RoleName: strconv.Itoa(n),
+			Num:      n,
 		})
 	}
 
@@ -112,11 +112,11 @@ func TestSelectChoosesAllEntriesAtLeastMin(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			seen[entry.Value]++
+			seen[entry.RoleName]++
 		}
 
 		for _, entry := range selectorConfig {
-			numSeen := seen[entry.Value]
+			numSeen := seen[entry.RoleName]
 			if numSeen < entry.Num {
 				t.Fatalf("expected at least: %v", entry.Num)
 			}

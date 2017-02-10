@@ -20,7 +20,7 @@ import (
 func selectRandom(selectorConfig talcum.SelectorConfig, config *talcum.Config) {
 	selector := talcum.NewSelector(config, selectorConfig, nil)
 	entry := selector.SelectRandom()
-	fmt.Println(entry.Value)
+	fmt.Println(entry.RoleName)
 }
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 	var config talcum.Config
 	var consulHost string
 
-	flag.StringVar(&selectorConfigPath, "config-path", "", "the path to the selector configuration file")
+	flag.StringVar(&selectorConfigPath, "config-path", "", "the path to the role configuration file")
 	flag.StringVar(&consulHost, "consul-host", "localhost:8500", "the location of Consul")
 	flag.StringVar(&config.ApplicationName, "app-name", "app", "the name of the current application")
 	flag.StringVar(&config.SelectionID, "selection-id", "1", "the ID of the current selection")
@@ -75,5 +75,5 @@ func main() {
 		return
 	}
 
-	fmt.Println(entry.Value)
+	fmt.Println(entry.RoleName)
 }
