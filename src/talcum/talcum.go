@@ -141,7 +141,7 @@ func (s *Selector) Select() (*SelectorEntry, error) {
 	}
 
 	if s.talcumConfig.DebugMode {
-		log.Printf("Selecting random key")
+		log.Printf("All keys are locked, selecting random key")
 	}
 
 	// If we couldn't claim anything, choose an entry randomly.
