@@ -5,8 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"time"
+
+	crand "crypto/rand"
+
+	"math/rand"
 
 	"github.com/dollarshaveclub/talcum/src/talcum"
 	"github.com/hashicorp/consul/api"
@@ -20,6 +25,12 @@ func selectRandom(selectorConfig talcum.SelectorConfig, config *talcum.Config) {
 
 func main() {
 	log.SetOutput(os.Stderr)
+
+	seed, err := crand.Int(crand.Reader, big.NewInt(100000))
+	if err != nil {
+		log.Printf("Error generating random seed: %s", err)
+	}
+	rand.Seed(seed.Int64())
 
 	var selectorConfigPath string
 	var config talcum.Config

@@ -99,7 +99,9 @@ func (s *Selector) lockKey(entry *SelectorEntry, num int) string {
 // SelectRandom returns a random entry, weighing each entry using its
 // expected number of occurrences as a weight.
 func (s *Selector) SelectRandom() *SelectorEntry {
-	return s.selectorConfig.entryLocks()[rand.Intn(len(s.selectorConfig))].selectorEntry
+	max := len(s.selectorConfig.entryLocks())
+	r := rand.Intn(max)
+	return s.selectorConfig.entryLocks()[r].selectorEntry
 }
 
 // Select locks an entry and returns it. Select attempts to lock all
