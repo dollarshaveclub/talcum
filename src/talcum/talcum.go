@@ -96,7 +96,8 @@ func (s *Selector) lockKey(entry *SelectorEntry, num int) string {
 		s.talcumConfig.SelectionID, entry.Value, num)
 }
 
-// SelectRandom returns a random entry.
+// SelectRandom returns a random entry, weighing each entry using its
+// expected number of occurrences as a weight.
 func (s *Selector) SelectRandom() *SelectorEntry {
 	return s.selectorConfig.entryLocks()[rand.Intn(len(s.selectorConfig))].selectorEntry
 }

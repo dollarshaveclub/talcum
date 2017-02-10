@@ -12,6 +12,12 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
+func selectRandom(selectorConfig talcum.SelectorConfig, config *talcum.Config) {
+	selector := talcum.NewSelector(config, selectorConfig, nil)
+	entry := selector.SelectRandom()
+	fmt.Println(entry.Value)
+}
+
 func main() {
 	log.SetOutput(os.Stderr)
 
@@ -41,7 +47,10 @@ func main() {
 	consulConfig.Address = consulHost
 	consulClient, err := api.NewClient(consulConfig)
 	if err != nil {
-		panic(err)
+		log.Printf("Error creating Consul client: %s", err)
+		log.Printf("Selecting random entry")
+		selectRandom(selectorConfig, &config)
+		return
 	}
 	kvClient := consulClient.KV()
 	locker := talcum.NewConsulLocker(kvClient)
@@ -49,7 +58,10 @@ func main() {
 	selector := talcum.NewSelector(&config, selectorConfig, locker)
 	entry, err := selector.Select()
 	if err != nil {
-		panic(err)
+		log.Printf("Error selecting an entry: %s", err)
+		log.Printf("Selecting random entry")
+		selectRandom(selectorConfig, &config)
+		return
 	}
 
 	fmt.Println(entry.Value)
