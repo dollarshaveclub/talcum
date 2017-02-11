@@ -1,0 +1,14 @@
+[
+  {
+    "role_name": "role-1",
+    "num": 1
+  },
+  {
+    "role_name": "role-2",
+    "num": 2
+  },
+  {
+    "role_name": "role-3",
+    "num": 3
+  }
+]
