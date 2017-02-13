@@ -46,25 +46,28 @@ func main() {
 	flag.BoolVar(&config.DebugMode, "debug", false, "run in debug mode")
 	flag.DurationVar(&config.LockDelay, "lock-delay", 0, "the delay in between lock attempts")
 	flag.StringVar(&mconfig.StatsdAddr, "statsd-addr", "0.0.0.0:8125", "statsd (dogstatsd) address")
-	flag.StringVar(&mconfig.Namespace, "metrics-namespace", "talcum", "Datadog metrics namespace")
-	flag.StringVar(&mconfig.TagStr, "metrics-tags", "production", "Datadog metrics tags (comma-delimited)")
+	flag.BoolVar(&mconfig.Datadog, "datadog", true, "statsd is Datadog (dogstatsd)")
+	flag.StringVar(&mconfig.Namespace, "metrics-namespace", "talcum", "Datadog metrics namespace (ignored if not using Datadog)")
+	flag.StringVar(&mconfig.TagStr, "metrics-tags", "production", "Metrics tags (comma-delimited, either datadog <key>:<value> or influxdb <key>=<value>")
 	flag.Parse()
 
 	if mconfig.TagStr != "" {
 		mconfig.Tags = strings.Split(mconfig.TagStr, ",")
 	}
 
-	mc, err := talcum.NewDatadogCollector(mconfig.StatsdAddr, mconfig.Namespace, mconfig.Tags, logger)
+	mc, err := talcum.NewStatsdCollector(&mconfig, logger)
 	if err != nil {
 		logger.Printf("error initializing datadog collector: %v", err)
 	}
 
 	clierr := func(msg string, params ...interface{}) {
 		mc.RoleError()
+		mc.Flush()
 		fmt.Fprintf(os.Stderr, msg+"\n", params...)
 		os.Exit(1)
 	}
 
+	defer mc.Flush()
 	defer mc.TimeToPickRole(time.Now().UTC())
 
 	consulConfig := api.DefaultConfig()

@@ -3,9 +3,11 @@ package talcum
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
-	"github.com/DataDog/datadog-go/statsd"
+	dogstatsd "github.com/DataDog/datadog-go/statsd"
+	"gopkg.in/alexcesaro/statsd.v2"
 )
 
 // MetricsCollector describes an object capabale of pushing metrics somewhere
@@ -14,66 +16,110 @@ type MetricsCollector interface {
 	RoleChosen(name string)
 	RandomRoleChosen()
 	RoleError()
+	Flush()
+}
+
+// MetricsConfig contains options related to Datadog
+type MetricsConfig struct {
+	Datadog    bool
+	StatsdAddr string
+	Namespace  string
+	Tags       []string
+	TagStr     string
 }
 
 // DatadogCollector represents a collector that pushes metrics to Datadog
-type DatadogCollector struct {
-	c      *statsd.Client
-	tags   []string
+type StatsdCollector struct {
+	dc     *dogstatsd.Client
+	sc     *statsd.Client
 	logger *log.Logger
 }
 
 // NewDatadogCollector returns a DatadogCollector using dogstatsd at addr
-func NewDatadogCollector(addr string, namespace string, tags []string, logger *log.Logger) (*DatadogCollector, error) {
-	c, err := statsd.New(addr)
-	if err != nil {
-		return nil, err
+func NewStatsdCollector(config *MetricsConfig, logger *log.Logger) (*StatsdCollector, error) {
+	var err error
+	var dc *dogstatsd.Client
+	var sc *statsd.Client
+	if config.Datadog {
+		dc, err = dogstatsd.New(config.StatsdAddr)
+		if err != nil {
+			return nil, fmt.Errorf("error creating dogstatsd client: %v", err)
+		}
+		dc.Tags = config.Tags
+		dc.Namespace = config.Namespace
+	} else {
+		ts := []string{}
+		for _, t := range config.Tags {
+			if strings.Contains(t, "=") {
+				ts = append(ts, strings.Split(t, "=")...)
+			} else {
+				logger.Printf("ignoring malformed metrics tag: %v (expected '<key>=<value>')", t)
+			}
+		}
+		sc, err = statsd.New(statsd.Address(config.StatsdAddr), statsd.TagsFormat(statsd.InfluxDB), statsd.Tags(ts...))
+		if err != nil {
+			return nil, fmt.Errorf("error creating statsd client: %v", err)
+		}
 	}
-	c.Namespace = namespace
-	return &DatadogCollector{
-		c:      c,
-		tags:   tags,
+	return &StatsdCollector{
+		dc:     dc,
+		sc:     sc,
 		logger: logger,
 	}, nil
 }
 
 // TimeToPickRole records the amount of time elapsed picking a role
-func (dc *DatadogCollector) TimeToPickRole(start time.Time) {
+func (dc *StatsdCollector) TimeToPickRole(start time.Time) {
 	if dc != nil {
-		dc.timing("time_to_pick_role", time.Since(start), dc.tags)
+		dc.timing("time_to_pick_role", time.Since(start))
 	}
 }
 
 // RoleChosen records the specific role chosen
-func (dc *DatadogCollector) RoleChosen(name string) {
+func (dc *StatsdCollector) RoleChosen(name string) {
 	if dc != nil {
 		m := fmt.Sprintf("role_assigned.%v", name)
-		dc.incr(m, dc.tags)
+		dc.incr(m)
 	}
 }
 
 // RoleError increments the error counter
-func (dc *DatadogCollector) RoleError() {
+func (dc *StatsdCollector) RoleError() {
 	if dc != nil {
-		dc.incr("errors", dc.tags)
+		dc.incr("errors")
 	}
 }
 
 // RandomRoleChosen counts whenever a random role is chosen
-func (dc *DatadogCollector) RandomRoleChosen() {
+func (dc *StatsdCollector) RandomRoleChosen() {
 	if dc != nil {
-		dc.incr("random_role_chosen", dc.tags)
+		dc.incr("random_role_chosen")
 	}
 }
 
-func (dc *DatadogCollector) timing(metric string, duration time.Duration, tags []string) (err error) {
-	defer func() { dc.logger.Printf("metric: timing: %v, %v, %v", metric, duration, tags) }()
-
-	return dc.c.Timing(metric, duration, tags, 1)
+// Flush flushes any pending metrics to statsd
+func (dc *StatsdCollector) Flush() {
+	if dc != nil && dc.sc != nil {
+		dc.sc.Flush()
+	}
 }
 
-func (dc *DatadogCollector) incr(metric string, tags []string) (err error) {
-	defer func() { dc.logger.Printf("metric: incr: %v, %v", metric, tags) }()
+func (dc *StatsdCollector) timing(metric string, duration time.Duration) (err error) {
+	defer func() { dc.logger.Printf("metric: timing: %v, %v", metric, duration) }()
 
-	return dc.c.Incr(metric, tags, 1)
+	if dc.dc != nil {
+		return dc.dc.Timing(metric, duration, nil, 1)
+	}
+	dc.sc.Timing(metric, duration)
+	return nil
+}
+
+func (dc *StatsdCollector) incr(metric string) (err error) {
+	defer func() { dc.logger.Printf("metric: incr: %v", metric) }()
+
+	if dc.dc != nil {
+		return dc.dc.Incr(metric, nil, 1)
+	}
+	dc.sc.Increment(metric)
+	return nil
 }
