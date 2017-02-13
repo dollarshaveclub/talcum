@@ -36,14 +36,17 @@ Usage of talcum:
 [
   {
     "role_name": "role-1",
+    "role_definition": "foo,bar,baz",
     "num": 1
   },
   {
     "role_name": "role-2",
+    "role_definition": "foo,bar",
     "num": 2
   },
   {
     "role_name": "role-3",
+    "role_definition": "alice,bob,mary",
     "num": 3
   }
 ]
@@ -58,6 +61,8 @@ the selection process should have the same configuration file.
 ```
 $ talcum -config-path examples/example2.json
   role-2
+  foo,bar
 ```
 
-The selected role is sent to stdout.
+The selected role definition is written to stdout.
+The role name is written to stderr.

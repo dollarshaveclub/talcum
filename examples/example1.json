@@ -1,14 +1,17 @@
 [
   {
-    "role_name": "low,medium,high",
+    "role_name": "low-priority",
+    "role_definition": "low,medium,high",
     "num": 3
   },
   {
     "role_name": "billing",
+    "role_definition": "billing,fulfillment",
     "num": 4
   },
   {
-    "role_name": "high,medium,low",
+    "role_name": "high-priority",
+    "role_definition": "high,medium,low",
     "num": 5
   }
 ]

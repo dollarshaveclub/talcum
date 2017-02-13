@@ -1,14 +1,17 @@
 [
   {
     "role_name": "role-1",
+    "role_definition": "foo,bar,baz",
     "num": 1
   },
   {
     "role_name": "role-2",
+    "role_definition": "foo,bar",
     "num": 2
   },
   {
     "role_name": "role-3",
+    "role_definition": "alice,bob,mary",
     "num": 3
   }
 ]

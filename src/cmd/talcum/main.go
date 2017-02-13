@@ -112,5 +112,6 @@ func main() {
 	}
 
 	mc.RoleChosen(entry.RoleName)
-	fmt.Println(entry.RoleName)
+	logger.Printf("role: %v", entry.RoleName)
+	fmt.Println(entry.RoleDefinition)
 }
