@@ -2,6 +2,15 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/DataDog/datadog-go/statsd",
+			"repository": "https://github.com/DataDog/datadog-go",
+			"vcs": "git",
+			"revision": "6fa3e39b86f8cbb638a971f2a90b9ebd98074c6b",
+			"branch": "master",
+			"path": "/statsd",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/hashicorp/consul/api",
 			"repository": "https://github.com/hashicorp/consul",
 			"vcs": "git",
@@ -26,6 +35,14 @@
 			"revision": "d3f7a68b2f0fc0a3a4df7aee3286f423f8749941",
 			"branch": "master",
 			"path": "vendor/github.com/hashicorp/serf/coordinate",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/alexcesaro/statsd.v2",
+			"repository": "https://gopkg.in/alexcesaro/statsd.v2",
+			"vcs": "git",
+			"revision": "7fea3f0d2fab1ad973e641e51dba45443a311a90",
+			"branch": "master",
 			"notests": true
 		}
 	]
