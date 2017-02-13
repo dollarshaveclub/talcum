@@ -18,6 +18,14 @@ type Config struct {
 	DebugMode       bool
 }
 
+// MetricsConfig contains options related to Datadog
+type MetricsConfig struct {
+	StatsdAddr string
+	Namespace  string
+	Tags       []string
+	TagStr     string
+}
+
 // SelectorEntry contains the name of each role and the number of
 // times it must be selected.
 type SelectorEntry struct {
