@@ -28,14 +28,16 @@ type MetricsConfig struct {
 	TagStr     string
 }
 
-// DatadogCollector represents a collector that pushes metrics to Datadog
+// StatsdCollector represents a collector that pushes metrics to
+// Datadog.
 type StatsdCollector struct {
 	dc     *dogstatsd.Client
 	sc     *statsd.Client
 	logger *log.Logger
 }
 
-// NewDatadogCollector returns a DatadogCollector using dogstatsd at addr
+// NewStatsdCollector returns a DatadogCollector using dogstatsd at
+// addr.
 func NewStatsdCollector(config *MetricsConfig, logger *log.Logger) (*StatsdCollector, error) {
 	var err error
 	var dc *dogstatsd.Client
