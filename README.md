@@ -22,12 +22,20 @@ Usage of talcum:
     	the location of Consul (default "localhost:8500")
   -consul-path string
     	the path to the role configuration in Consul
+  -datadog
+    	statsd is Datadog (dogstatsd) (default true)
   -debug
     	run in debug mode
   -lock-delay duration
     	the delay in between lock attempts
+  -metrics-namespace string
+    	Datadog metrics namespace (ignored if not using Datadog) (default "talcum")
+  -metrics-tags string
+    	Metrics tags (comma-delimited, either datadog <key>:<value> or influxdb <key>=<value> (default "production")
   -selection-id string
     	the ID of the current selection (default "1")
+  -statsd-addr string
+    	statsd (dogstatsd) address (default "0.0.0.0:8125")
 ```
 
 ## Example configuration
@@ -64,5 +72,5 @@ $ talcum -config-path examples/example2.json
   foo,bar
 ```
 
-The selected role definition is written to stdout.
-The role name is written to stderr.
+The selected role definition is written to stdout. The role name is
+written to stderr.
