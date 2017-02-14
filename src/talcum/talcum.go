@@ -21,8 +21,9 @@ type Config struct {
 // SelectorEntry contains the name of each role and the number of
 // times it must be selected.
 type SelectorEntry struct {
-	RoleName string `json:"role_name"`
-	Num      int    `json:"num"`
+	RoleName       string `json:"role_name"`
+	RoleDefinition string `json:"role_definition"`
+	Num            int    `json:"num"`
 }
 
 // SelectorConfig all selectable entries.
