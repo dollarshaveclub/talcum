@@ -1,7 +1,6 @@
-# talcum
+# Talcum
 
-Talcum is a tool that allows actors in a distributed system to
-coordinate role assignment.
+> Talcum allows members of a distributed system to auto-configure themselves.
 
 Talcum takes in a configuration file that defines all of the available
 roles and the number of actors that should take on the role. If there
