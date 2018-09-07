@@ -90,13 +90,19 @@ func main() {
 			clierr("error unmarshaling config: %v", err)
 		}
 	} else if selectorConfigConsulPath != "" {
-		kvpair, _, err := kvClient.Get(selectorConfigConsulPath, nil)
+		kvPair, _, err := kvClient.Get(selectorConfigConsulPath, nil)
 		if err != nil {
 			clierr("error reading consul KV: %v", err)
 		}
-		if err := json.Unmarshal(kvpair.Value, &selectorConfig); err != nil {
-			clierr("error unmarshaling config: %v", err)
+
+		if kvPair != nil {
+			if err := json.Unmarshal(kvPair.Value, &selectorConfig); err != nil {
+				clierr("error unmarshaling config: %v", err)
+			}
+		} else {
+			clierr("kv pair equal to nil")
 		}
+
 	} else {
 		clierr("Selector config not provided")
 	}
